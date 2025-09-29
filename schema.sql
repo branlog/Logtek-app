@@ -1,0 +1,34 @@
+
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  company text, phone text, default_address text, created_at timestamp with time zone default now()
+);
+create table if not exists public.addresses (
+  id bigserial primary key, user_id uuid references auth.users(id) on delete cascade,
+  label text, address text, created_at timestamp with time zone default now()
+);
+create table if not exists public.machines (
+  id bigserial primary key, user_id uuid references auth.users(id) on delete cascade,
+  model text, notes text, created_at timestamp with time zone default now()
+);
+create table if not exists public.orders (
+  id bigserial primary key, user_id uuid, total numeric, email text, phone text, address text, payload jsonb,
+  created_at timestamp with time zone default now()
+);
+alter table public.profiles enable row level security;
+alter table public.addresses enable row level security;
+alter table public.machines enable row level security;
+alter table public.orders enable row level security;
+create policy "read own profile" on public.profiles for select using ( auth.uid() = id );
+create policy "upsert own profile" on public.profiles for insert with check ( auth.uid() = id );
+create policy "update own profile" on public.profiles for update using ( auth.uid() = id );
+create policy "read own addresses" on public.addresses for select using ( auth.uid() = user_id );
+create policy "insert own addresses" on public.addresses for insert with check ( auth.uid() = user_id );
+create policy "update own addresses" on public.addresses for update using ( auth.uid() = user_id );
+create policy "delete own addresses" on public.addresses for delete using ( auth.uid() = user_id );
+create policy "read own machines" on public.machines for select using ( auth.uid() = user_id );
+create policy "insert own machines" on public.machines for insert with check ( auth.uid() = user_id );
+create policy "update own machines" on public.machines for update using ( auth.uid() = user_id );
+create policy "delete own machines" on public.machines for delete using ( auth.uid() = user_id );
+create policy "read own orders" on public.orders for select using ( auth.uid() = user_id );
+create policy "insert orders open" on public.orders for insert with check ( true );

@@ -7,5 +7,8 @@ window.APP_CONFIG = {
   adminPhoneIntl: "+14188943093",
   adminEmail: "info@logtek.ca",
   etransferEmail: "info@logtek.ca",
-  taxes: { TPS: 0.05, TVQ: 0.09975 }
+  taxes: { TPS: 0.05, TVQ: 0.09975 },
+  stripePaymentLink: "",
+  SUPABASE_URL: "",
+  SUPABASE_ANON_KEY: ""
 };

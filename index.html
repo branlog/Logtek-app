@@ -8,13 +8,23 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="config.js"></script>
   <script defer src="app.js"></script>
 </head>
 <body>
 <header class="topbar">
   <div class="brand">Logtek</div>
-  <button id="cartBtn" class="cart-btn" aria-label="Panier">🛒<span id="cartCount">0</span></button>
+  <nav class="nav">
+    <button data-nav="catalog">Catalogue</button>
+    <button data-nav="account">Compte</button>
+    <button data-nav="orders">Commandes</button>
+  </nav>
+  <div class="right">
+    <button id="loginBtn" class="btn">Se connecter</button>
+    <button id="logoutBtn" class="btn" hidden>Quitter</button>
+    <button id="cartBtn" class="cart-btn" aria-label="Panier">🛒<span id="cartCount">0</span></button>
+  </div>
 </header>
 
 <main id="view-catalog" class="view active">
@@ -53,7 +63,12 @@
       <input type="email" name="email" placeholder="info@exemple.com">
     </label>
     <label>Adresse de livraison
-      <input required name="address" placeholder="123, route du Rang, Code postal">
+      <input required name="address" id="addressField" placeholder="123, route du Rang, Code postal">
+      <small class="small"><input type="checkbox" id="saveAddress"> Enregistrer cette adresse</small>
+    </label>
+    <label>Machine (optionnel)
+      <input name="machine" id="machineField" placeholder="Ponsse Scorpion, Tigercat, etc.">
+      <small class="small"><input type="checkbox" id="saveMachine"> Enregistrer cette machine</small>
     </label>
     <label>Fenêtre souhaitée
       <select name="window">
@@ -88,12 +103,51 @@
   <div class="actions">
     <a id="waLink" class="primary" target="_blank" rel="noopener">Envoyer via WhatsApp</a>
     <a id="mailLink" target="_blank" rel="noopener">Envoyer par courriel</a>
+    <a id="stripeLink" target="_blank" rel="noopener">Payer maintenant (Stripe)</a>
     <button id="newOrder">Nouvelle commande</button>
   </div>
   <details class="small">
     <summary>Détail technique</summary>
     <pre id="orderJSON"></pre>
   </details>
+</main>
+
+<main id="view-account" class="view">
+  <h2>Compte</h2>
+  <div id="authArea">
+    <form id="authForm">
+      <label>Courriel <input type="email" name="email" required></label>
+      <label>Mot de passe <input type="password" name="password" required></label>
+      <div class="actions">
+        <button type="submit" data-auth="login" class="primary">Se connecter</button>
+        <button type="submit" data-auth="signup">Créer un compte</button>
+      </div>
+    </form>
+    <p class="small">Un compte permet de sauvegarder vos adresses, machines et consulter vos commandes.</p>
+  </div>
+
+  <div id="profileArea" hidden>
+    <h3>Profil</h3>
+    <form id="profileForm">
+      <label>Entreprise / Nom <input name="company"></label>
+      <label>Téléphone <input name="phone"></label>
+      <label>Adresse par défaut <input name="default_address"></label>
+      <div class="actions"><button class="primary">Enregistrer</button></div>
+    </form>
+
+    <h3>Adresses sauvegardées</h3>
+    <div id="addresses"></div>
+    <div class="actions"><button id="addAddressBtn">Ajouter une adresse</button></div>
+
+    <h3>Machines sauvegardées</h3>
+    <div id="machines"></div>
+    <div class="actions"><button id="addMachineBtn">Ajouter une machine</button></div>
+  </div>
+</main>
+
+<main id="view-orders" class="view">
+  <h2>Historique des commandes</h2>
+  <div id="ordersList">Connectez-vous pour voir vos commandes.</div>
 </main>
 
 <footer class="footer">

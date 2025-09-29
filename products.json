@@ -1,62 +1,37 @@
 [
   {
     "id": "def-20l",
-    "name": "Urée (DEF) 20 L – certifié ISO 22241",
-    "desc": "Solution d'urée 32.5% pour SCR. Bidon 20 litres.",
+    "name": "Urée (DEF) 20 L – ISO 22241",
     "price": 26.9,
     "unit": "bidon",
-    "sku": "DEF20L",
-    "tags": [
-      "def",
-      "uree",
-      "camion"
-    ]
+    "sku": "DEF20L"
   },
   {
     "id": "oil-15w40-18.9",
-    "name": "Huile moteur 15W40 – seau 18.9 L",
-    "desc": "Huile diesel lourde API CK-4. Equivalent Shell Rotella/Total Rubia.",
+    "name": "Huile moteur 15W40 – 18.9 L",
     "price": 114.0,
     "unit": "seau",
-    "sku": "OIL15W40-18.9",
-    "tags": [
-      "huile",
-      "moteur",
-      "diesel"
-    ]
+    "sku": "OIL15W40-18.9"
   },
   {
     "id": "hyd-iso46-20l",
     "name": "Huile hydraulique ISO 46 – 20 L",
-    "desc": "Huile hydraulique anti-usure, applications forestières et industrielles.",
     "price": 89.0,
     "unit": "bidon",
-    "sku": "HYD46-20L",
-    "tags": [
-      "hydraulique",
-      "huile"
-    ]
+    "sku": "HYD46-20L"
   },
   {
     "id": "grease-ctg-10",
-    "name": "Graisse NLGI 2 – Cartouches (boîte de 10)",
-    "desc": "Graisse multiusage EP, haute pression. Lot de 10 cartouches.",
+    "name": "Graisse NLGI 2 – Cartouches (x10)",
     "price": 49.0,
     "unit": "boîte",
-    "sku": "GREASE-CTG-10",
-    "tags": [
-      "graisse"
-    ]
+    "sku": "GREASE-CTG-10"
   },
   {
     "id": "filter-oil-std",
-    "name": "Filtre à huile – gabarit standard (référence à confirmer)",
-    "desc": "Filtre générique — confirmer modèle machine avant livraison.",
+    "name": "Filtre à huile — standard",
     "price": 19.0,
     "unit": "unité",
-    "sku": "FILTER-OIL-STD",
-    "tags": [
-      "filtre"
-    ]
+    "sku": "FILTER-OIL-STD"
   }
 ]
