@@ -1,20 +1,8 @@
 
-create table if not exists public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  company text, phone text, default_address text, created_at timestamp with time zone default now()
-);
-create table if not exists public.addresses (
-  id bigserial primary key, user_id uuid references auth.users(id) on delete cascade,
-  label text, address text, created_at timestamp with time zone default now()
-);
-create table if not exists public.machines (
-  id bigserial primary key, user_id uuid references auth.users(id) on delete cascade,
-  model text, notes text, created_at timestamp with time zone default now()
-);
-create table if not exists public.orders (
-  id bigserial primary key, user_id uuid, total numeric, email text, phone text, address text, payload jsonb,
-  created_at timestamp with time zone default now()
-);
+create table if not exists public.profiles ( id uuid primary key references auth.users(id) on delete cascade, company text, phone text, default_address text, created_at timestamp with time zone default now());
+create table if not exists public.addresses ( id bigserial primary key, user_id uuid references auth.users(id) on delete cascade, label text, address text, created_at timestamp with time zone default now());
+create table if not exists public.machines ( id bigserial primary key, user_id uuid references auth.users(id) on delete cascade, model text, notes text, created_at timestamp with time zone default now());
+create table if not exists public.orders ( id bigserial primary key, user_id uuid, total numeric, email text, phone text, address text, payload jsonb, created_at timestamp with time zone default now());
 alter table public.profiles enable row level security;
 alter table public.addresses enable row level security;
 alter table public.machines enable row level security;

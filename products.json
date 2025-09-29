@@ -1,16 +1,42 @@
 [
   {
     "id": "def-20l",
-    "name": "Urée (DEF) 20 L – ISO 22241",
+    "name": "Urée (DEF) 20 L – certifié ISO 22241",
+    "desc": "Solution d'urée 32.5% pour SCR. Bidon 20 L.",
     "price": 26.9,
     "unit": "bidon",
     "sku": "DEF20L"
   },
   {
     "id": "oil-15w40-18.9",
-    "name": "Huile moteur 15W40 – 18.9 L",
+    "name": "Huile moteur 15W40 – seau 18.9 L",
+    "desc": "Huile diesel lourde API CK-4.",
     "price": 114.0,
     "unit": "seau",
     "sku": "OIL15W40-18.9"
+  },
+  {
+    "id": "hyd-iso46-20l",
+    "name": "Huile hydraulique ISO 46 – 20 L",
+    "desc": "Anti-usure, applications forestières/industrielles.",
+    "price": 89.0,
+    "unit": "bidon",
+    "sku": "HYD46-20L"
+  },
+  {
+    "id": "grease-ctg-10",
+    "name": "Graisse NLGI 2 – Cartouches (x10)",
+    "desc": "Graisse multiusage EP, haute pression.",
+    "price": 49.0,
+    "unit": "boîte",
+    "sku": "GREASE-CTG-10"
+  },
+  {
+    "id": "filter-oil-std",
+    "name": "Filtre à huile — standard",
+    "desc": "Confirmer le modèle de machine avant livraison.",
+    "price": 19.0,
+    "unit": "unité",
+    "sku": "FILTER-OIL-STD"
   }
 ]
