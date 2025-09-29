@@ -12,26 +12,5 @@
     "price": 114.0,
     "unit": "seau",
     "sku": "OIL15W40-18.9"
-  },
-  {
-    "id": "hyd-iso46-20l",
-    "name": "Huile hydraulique ISO 46 – 20 L",
-    "price": 89.0,
-    "unit": "bidon",
-    "sku": "HYD46-20L"
-  },
-  {
-    "id": "grease-ctg-10",
-    "name": "Graisse NLGI 2 – Cartouches (x10)",
-    "price": 49.0,
-    "unit": "boîte",
-    "sku": "GREASE-CTG-10"
-  },
-  {
-    "id": "filter-oil-std",
-    "name": "Filtre à huile — standard",
-    "price": 19.0,
-    "unit": "unité",
-    "sku": "FILTER-OIL-STD"
   }
 ]
