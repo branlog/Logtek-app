@@ -1,15 +1,15 @@
 [
   {
-    "id": "def",
-    "name": "Urée (DEF)",
-    "desc": "Solution d'urée 32.5% pour SCR.",
+    "id": "def-20l",
+    "name": "Urée (DEF) 20 L – certifié ISO 22241",
+    "desc": "Solution d'urée 32.5% pour SCR. Bidon 20 L.",
     "price": 26.9,
     "unit": "bidon",
     "sku": "DEF20L"
   },
   {
     "id": "oil-15w40-18.9",
-    "name": "Huile moteur 15W40",
+    "name": "Huile moteur 15W40 – seau 18.9 L",
     "desc": "Huile diesel lourde API CK-4.",
     "price": 114.0,
     "unit": "seau",

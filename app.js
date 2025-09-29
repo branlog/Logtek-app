@@ -1,11 +1,5 @@
-
 let supa = null;
-const state = {
-  products: [],
-  cart: JSON.parse(localStorage.getItem('cart') || '[]'),
-  user: null,
-  profile: null
-};
+const state = { products: [], cart: JSON.parse(localStorage.getItem('cart') || '[]'), user: null, profile: null, machines: {} };
 const fmt = (n) => n.toLocaleString('fr-CA', { style:'currency', currency: APP_CONFIG.baseCurrency });
 const qs = (s)=>document.querySelector(s);
 const view = (id)=>{ document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); qs('#'+id).classList.add('active'); }
@@ -83,6 +77,52 @@ function renderCart(){
   qs('#shipping').textContent = fmt(ship);
   qs('#grandtotal').textContent = fmt(subtotal + ship);
 }
+
+// Machines dropdowns
+async function initMachinesDropdowns(){
+  try{
+    const res = await fetch('machines.json');
+    state.machines = await res.json();
+    const brandSel = document.getElementById('machineBrand');
+    const modelSel = document.getElementById('machineModel');
+    const yearSel = document.getElementById('machineYear');
+
+    brandSel.innerHTML = '<option value="">-- Choisir marque --</option>';
+    Object.keys(state.machines).sort().forEach(b=>{
+      const opt = document.createElement('option'); opt.value=b; opt.textContent=b; brandSel.appendChild(opt);
+    });
+
+    brandSel.addEventListener('change', ()=>{
+      modelSel.innerHTML = '<option value="">-- Choisir modèle --</option>';
+      yearSel.innerHTML = '<option value="">-- Année --</option>';
+      const b = brandSel.value;
+      if(!b){ return; }
+      Object.keys(state.machines[b]).sort().forEach(m=>{
+        const opt = document.createElement('option'); opt.value=m; opt.textContent=m; modelSel.appendChild(opt);
+      });
+    });
+
+    modelSel.addEventListener('change', ()=>{
+      yearSel.innerHTML = '<option value="">-- Année --</option>';
+      const b = brandSel.value, m = modelSel.value;
+      if(!b || !m){ return; }
+      (state.machines[b][m] || []).forEach(y=>{
+        const opt = document.createElement('option'); opt.value=y; opt.textContent=y; yearSel.appendChild(opt);
+      });
+    });
+  }catch(e){ console.error('Machines init error', e); }
+}
+function machineFromForm(fd){
+  const manual = fd.get('machineCustom');
+  if(manual) return manual.trim();
+  const b = fd.get('machineBrand') || '';
+  const m = fd.get('machineModel') || '';
+  const y = fd.get('machineYear') || '';
+  const parts = [b,m,y].filter(Boolean);
+  return parts.join(' ');
+}
+
+// Build order
 function buildOrder(fd){
   const items = state.cart.map(c=>{ const p=state.products.find(pp=>pp.id===c.id); return {id:c.id,name:p.name,sku:p.sku,qty:c.qty,unit:p.unit,price:p.price}; });
   const subtotal = items.reduce((a,i)=>a+i.qty*i.price,0);
@@ -90,8 +130,12 @@ function buildOrder(fd){
   const taxes = { TPS: +(subtotal*APP_CONFIG.taxes.TPS).toFixed(2), TVQ: +((subtotal+subtotal*APP_CONFIG.taxes.TPS)*APP_CONFIG.taxes.TVQ).toFixed(2) };
   const total = +(subtotal + shipping + taxes.TPS + taxes.TVQ).toFixed(2);
   return {
-    meta:{ createdAt: new Date().toISOString(), app:'Logtek', version:'pro-brand-1.0.0' },
-    customer:{ name:fd.get('customerName'), phone:fd.get('phone'), email:fd.get('email'), address:fd.get('address'), window:fd.get('window'), payMethod:fd.get('payMethod'), notes:fd.get('notes'), machine:fd.get('machine') },
+    meta:{ createdAt: new Date().toISOString(), app:'Logtek', version:'pro-brand-machines-1.0.0' },
+    customer:{
+      name:fd.get('customerName'), phone:fd.get('phone'), email:fd.get('email'),
+      address:fd.get('address'), window:fd.get('window'), payMethod:fd.get('payMethod'),
+      notes:fd.get('notes'), machine: machineFromForm(fd)
+    },
     items, subtotal, shipping, taxes, total, currency: APP_CONFIG.baseCurrency,
     user_id: state.user?.id || null
   };
@@ -165,8 +209,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
     if(mode==='signup'){ const { error } = await supa.auth.signUp({ email, password }); if(error) alert(error.message); else alert('Vérifie ton email pour confirmer.'); }
     else { const { error } = await supa.auth.signInWithPassword({ email, password }); if(error) alert(error.message); }
   });
+  // machines dropdowns
+  initMachinesDropdowns();
   // PWA install
-  window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); const b=qs('#installBtn'); b.hidden=false; b.onclick=async()=>{ e.prompt(); await e.userChoice; b.hidden=true; }; });
+  window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); const b=document.getElementById('installBtn'); if(!b) return; b.hidden=false; b.onclick=async()=>{ e.prompt(); await e.userChoice; b.hidden=true; }; });
   initSupabase();
 });
 function renderAccount(){ const auth=qs('#authArea'); const prof=qs('#profileArea'); if(state.user){ auth.hidden=true; prof.hidden=false; } else { auth.hidden=false; prof.hidden=true; } }
