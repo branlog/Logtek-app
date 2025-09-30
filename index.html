@@ -2,82 +2,235 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Logtek 2.0</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <meta name="theme-color" content="#0a0a0a" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="config.js"></script>
   <script defer src="app.js"></script>
 </head>
 <body>
-<header>
-  <h1>Logtek 2.0</h1>
-  <nav>
-    <a href="#" onclick="showView('catalog')">Catalogue</a> |
-    <a href="#" onclick="showView('cart')">Panier</a> |
-    <a href="#" onclick="showView('checkout')">Commander</a> |
-    <a href="#" onclick="showView('admin')">Admin</a>
+<header class="topbar">
+  <div class="brand"><span class="logo-text">LOGTEK</span></div>
+  <nav class="nav">
+    <button data-nav="catalog">Catalogue</button>
+    <button data-nav="account">Compte</button>
+    <button data-nav="orders">Commandes</button>
+    <button data-nav="admin" id="adminNav" hidden>Admin</button>
   </nav>
+  <div class="right">
+    <div class="category-filter">
+      <select id="catFilter"></select>
+    </div>
+    <button id="cartBtn" class="cart-btn" aria-label="Panier">🛒<span id="cartCount">0</span></button>
+    <button id="loginBtn" class="btn ghost">Se connecter</button>
+    <button id="logoutBtn" class="btn ghost" hidden>Quitter</button>
+  </div>
 </header>
 
 <main id="view-catalog" class="view active">
-  <h2>Catalogue</h2>
-  <div id="catalog"></div>
+  <section class="hero">
+    <h1>Commodités pour machines — livraison rapide</h1>
+    <p>Chaînes & guides • Huiles • Urée (DEF) • Filtres</p>
+    <div class="chips">
+      <span class="chip">Zone pilote 15 km</span>
+      <span class="chip">Interac / Paiement à la livraison</span>
+      <span class="chip">Facturation clients approuvés</span>
+    </div>
+  </section>
+  <section id="categories" class="categories"></section>
+  <section class="catalog" id="catalog"></section>
 </main>
 
 <main id="view-cart" class="view">
-  <h2>Panier</h2>
-  <div id="cart"></div>
+  <h2>Votre panier</h2>
+  <div id="cartItems" class="card"></div>
+  <div class="totals">
+    <div><span>Sous-total</span><strong id="subtotal">$0.00</strong></div>
+    <div><span>Livraison</span><strong id="shipping">$0.00</strong></div>
+    <div class="grand"><span>Total</span><strong id="grandtotal">$0.00</strong></div>
+  </div>
+  <div class="actions">
+    <button id="continueShopping" class="btn ghost">← Continuer</button>
+    <button id="checkoutBtn" class="btn primary">Passer à la commande</button>
+  </div>
 </main>
 
 <main id="view-checkout" class="view">
-  <h2>Checkout avec GPS</h2>
-  <form id="checkoutForm">
-    <label>Nom <input name="name" required></label><br>
-    <label>Téléphone <input name="phone" required></label><br>
-    <label>Adresse <input name="address"></label><br>
-    <div id="map" style="height:300px;margin:10px 0;"></div>
+  <h2>Informations de livraison</h2>
+  <form id="checkoutForm" class="card form">
+    <div class="grid2">
+      <label>Entreprise / Nom<input required name="customerName" placeholder="Entrepreneur Forestier Inc."></label>
+      <label>Téléphone<input required name="phone" placeholder="+1 418 ..." pattern="[0-9+\-()\s]{7,}"></label>
+      <label>Courriel<input type="email" name="email" placeholder="info@exemple.com"></label>
+    </div>
+
+    <h3>Machine</h3>
+    <div id="machineError" class="alert" hidden>Impossible de charger la base machines. Utilisez le champ "Autre" ci‑dessous.</div>
+    <div class="grid3">
+      <label>Marque
+        <select id="machineBrand" name="machineBrand"></select>
+      </label>
+      <label>Modèle
+        <select id="machineModel" name="machineModel"></select>
+      </label>
+      <label>Année
+        <select id="machineYear" name="machineYear"></select>
+      </label>
+    </div>
+    <label>Autre (si non listée)
+      <input name="machineCustom" placeholder="Marque / Modèle / Année">
+    </label>
+
+    <label>Adresse de livraison<input required name="address" id="addressField" placeholder="123, route du Rang, Ville, Code postal"></label>
+
+    <h3>Localisation GPS (optionnel mais recommandé)</h3>
+    <div class="micro">Clique sur la carte pour déposer un pin, ou utilise ta position.</div>
+    <div id="map" style="height:320px;border:1px solid var(--line);border-radius:12px;overflow:hidden"></div>
+    <div class="row" style="margin-top:8px;gap:8px">
+      <button class="btn" type="button" id="useMyLocation">📍 Utiliser ma position</button>
+      <span class="small" id="gpsLabel">Aucun point sélectionné</span>
+    </div>
     <input type="hidden" name="lat" id="lat">
     <input type="hidden" name="lng" id="lng">
-    <button type="button" onclick="useMyLocation()">📍 Utiliser ma position</button><br><br>
-    <button type="submit">Confirmer commande</button>
+
+    <div class="micro">
+      <label class="inline"><input type="checkbox" id="saveAddress"> Enregistrer cette adresse</label>
+      <label class="inline"><input type="checkbox" id="saveMachine"> Enregistrer cette machine</label>
+    </div>
+    <div class="grid3">
+      <label>Fenêtre souhaitée
+        <select name="window">
+          <option value="ASAP">Dès que possible</option>
+          <option value="AM">Aujourd'hui AM</option>
+          <option value="PM">Aujourd'hui PM</option>
+          <option value="EVE">Ce soir</option>
+          <option value="TOMORROW">Demain</option>
+        </select>
+      </label>
+      <label>Méthode de paiement
+        <select name="payMethod">
+          <option value="cod">Comptant / livraison</option>
+          <option value="etransfer">Virement Interac</option>
+          <option value="invoice">Facture (approuvés)</option>
+        </select>
+      </label>
+      <label>Notes<textarea name="notes" rows="2" placeholder="Code portail, consignes, contact..."></textarea></label>
+    </div>
+    <div class="actions">
+      <button type="button" id="backToCart" class="btn ghost">← Retour</button>
+      <button class="btn primary">Confirmer la commande</button>
+    </div>
   </form>
 </main>
 
-<main id="view-admin" class="view">
-  <h2>Admin Dashboard</h2>
-  <div id="adminStats"></div>
-  <h3>Carte des commandes</h3>
-  <div id="adminMap" style="height:400px"></div>
+<main id="view-confirm" class="view">
+  <h2>Commande prête à envoyer</h2>
+  <div class="card">
+    <p>Choisissez comment nous envoyer votre commande :</p>
+    <div class="actions">
+      <a id="waLink" class="btn primary" target="_blank" rel="noopener">WhatsApp</a>
+      <a id="mailLink" class="btn" target="_blank" rel="noopener">Email</a>
+      <a id="stripeLink" class="btn accent" target="_blank" rel="noopener" style="display:none">Payer maintenant</a>
+      <button id="newOrder" class="btn ghost">Nouvelle commande</button>
+    </div>
+    <details class="small">
+      <summary>Voir le JSON de commande</summary>
+      <pre id="orderJSON"></pre>
+    </details>
+  </div>
 </main>
 
+<main id="view-auth" class="view">
+  <section class="auth-card">
+    <div class="auth-brand">LOGTEK</div>
+    <div class="auth-tabs">
+      <button data-tab="signin" class="active">Connexion</button>
+      <button data-tab="signup">Créer un compte</button>
+      <button data-tab="reset">Mot de passe oublié</button>
+    </div>
+    <div class="auth-forms">
+      <form id="form-signin" class="form auth-form">
+        <label>Courriel<input type="email" name="email" required placeholder="ex: client@exemple.com"></label>
+        <label>Mot de passe<input type="password" name="password" required placeholder="••••••••"></label>
+        <div class="actions">
+          <button class="btn primary" type="submit">Se connecter</button>
+        </div>
+      </form>
+      <form id="form-signup" class="form auth-form" hidden>
+        <label>Courriel<input type="email" name="email" required></label>
+        <label>Mot de passe<input type="password" name="password" required></label>
+        <div class="actions">
+          <button class="btn accent" type="submit">Créer un compte</button>
+        </div>
+      </form>
+      <form id="form-reset" class="form auth-form" hidden>
+        <label>Courriel<input type="email" name="email" required></label>
+        <div class="actions">
+          <button class="btn" type="submit">Envoyer lien de réinitialisation</button>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<!-- ADMIN (protégé) -->
+<main id="view-admin" class="view">
+  <h2>Admin</h2>
+  <div class="tabs">
+    <button data-adm="dashboard" class="active">Dashboard</button>
+    <button data-adm="orders">Commandes</button>
+    <button data-adm="map">Carte</button>
+    <button data-adm="products">Produits</button>
+    <button data-adm="clients">Clients</button>
+  </div>
+
+  <section id="adm-dashboard" class="adm-section">
+    <div class="grid3">
+      <div class="card"><strong>CA total</strong><div id="adm-ca" class="big">$0</div></div>
+      <div class="card"><strong>Commandes</strong><div id="adm-orders-count" class="big">0</div></div>
+      <div class="card"><strong>Clients</strong><div id="adm-customers-count" class="big">0</div></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <strong>Dernières commandes</strong>
+      <div id="adm-last-orders" class="grid cards" style="margin-top:8px"></div>
+    </div>
+  </section>
+
+  <section id="adm-orders" class="adm-section" hidden>
+    <div id="adm-orders-list" class="grid cards"></div>
+  </section>
+
+  <section id="adm-map" class="adm-section" hidden>
+    <div id="adminMap" style="height:420px;border:1px solid var(--line);border-radius:12px;overflow:hidden"></div>
+  </section>
+
+  <section id="adm-products" class="adm-section" hidden>
+    <div class="row actions">
+      <button id="btnNewProduct" class="btn accent">➕ Nouveau produit</button>
+      <button id="btnImportSeed" class="btn">📥 Importer produits.json</button>
+    </div>
+    <div id="adm-products-list" class="grid cards"></div>
+  </section>
+
+  <section id="adm-clients" class="adm-section" hidden>
+    <div id="adm-clients-list" class="grid cards"></div>
+  </section>
+</main>
+
+<footer class="footer">
+  <button id="installBtn" class="btn accent" hidden>Installer l'app</button>
+  <span>© 2025 Logtek</span>
+</footer>
+
 <script>
-let map, marker;
-function initMap(){
-  map = L.map('map').setView([47.67, -68.48], 9);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-  map.on('click', function(e){
-    if(marker) marker.remove();
-    marker = L.marker(e.latlng).addTo(map);
-    document.getElementById('lat').value = e.latlng.lat;
-    document.getElementById('lng').value = e.latlng.lng;
-  });
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
 }
-function useMyLocation(){
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(pos=>{
-      const lat = pos.coords.latitude, lng = pos.coords.longitude;
-      map.setView([lat,lng], 13);
-      if(marker) marker.remove();
-      marker = L.marker([lat,lng]).addTo(map);
-      document.getElementById('lat').value = lat;
-      document.getElementById('lng').value = lng;
-    });
-  }
-}
-window.addEventListener('DOMContentLoaded', initMap);
 </script>
 </body>
 </html>
