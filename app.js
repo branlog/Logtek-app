@@ -4,7 +4,7 @@ const state = {
   products: [], 
   cart: JSON.parse(localStorage.getItem('cart') || '[]'), 
   user: null, profile: null, machinesDict: {}, category:'Toutes',
-  isAdmin: false, adminMap: null, adminMarkers: []
+  isAdmin: false, adminMap: null, adminMarkers: [], favGps: []
 };
 const fmt = (n) => n.toLocaleString('fr-CA', { style:'currency', currency: APP_CONFIG.baseCurrency });
 const qs = (s)=>document.querySelector(s);
@@ -19,17 +19,18 @@ async function initSupabase(){
   state.user = user || null;
   if(state.user){ await ensureProfile(); await checkAdmin(); }
   toggleAuthUI();
-  if(state.user){ await loadProfile(); await loadAddresses(); await loadMachines(); await loadOrders(); }
+  if(state.user){ await loadProfile(); await loadAddresses(); await loadMachines(); await loadOrders(); await loadFavGps(); }
   supa.auth.onAuthStateChange(async (_e, session)=>{
     state.user = session?.user || null;
     if(state.user){ await ensureProfile(); await checkAdmin(); }
     toggleAuthUI();
-    if(state.user){ loadProfile(); loadAddresses(); loadMachines(); loadOrders(); }
+    if(state.user){ loadProfile(); loadAddresses(); loadMachines(); loadOrders(); loadFavGps(); }
   });
 }
 function toggleAuthUI(){ qs('#loginBtn').hidden = !!state.user; qs('#logoutBtn').hidden = !state.user; qs('#adminNav').hidden = !state.isAdmin; }
 
 async function checkAdmin(){
+  if(!state.user) return state.isAdmin=false;
   const { data } = await supa.from('profiles').select('is_admin').eq('id', state.user.id).single();
   state.isAdmin = !!data?.is_admin;
   qs('#adminNav').hidden = !state.isAdmin;
@@ -172,7 +173,7 @@ function machineFromForm(fd){
   return parts.join(' ');
 }
 
-// ------- GPS Map (Leaflet) -------
+// ------- GPS Map (Leaflet) + favoris -------
 let checkoutMap = null, checkoutMarker = null;
 function initCheckoutMap(){
   const mapDiv = document.getElementById('map');
@@ -200,6 +201,35 @@ function initCheckoutMap(){
       }, (err)=> alert('Impossible de récupérer la position: '+err.message));
     } else alert('Géolocalisation non disponible.');
   });
+  bindFavGpsUI();
+}
+function bindFavGpsUI(){
+  const sel = qs('#favGpsSelect'); if(!sel) return;
+  sel.innerHTML = ''; sel.appendChild(new Option('— points GPS favoris —',''));
+  state.favGps.forEach(f=> sel.appendChild(new Option(`${f.label} (${f.lat.toFixed(4)},${f.lng.toFixed(4)})`, JSON.stringify(f))));
+  sel.onchange = ()=>{
+    try{
+      const f = JSON.parse(sel.value); if(!f) return;
+      if(checkoutMap){
+        checkoutMap.setView([f.lat,f.lng], 13);
+        if(checkoutMarker) checkoutMarker.remove();
+        checkoutMarker = L.marker([f.lat,f.lng]).addTo(checkoutMap);
+      }
+      qs('#lat').value=f.lat; qs('#lng').value=f.lng; qs('#gpsLabel').textContent = `Point: ${f.lat.toFixed(5)}, ${f.lng.toFixed(5)}`;
+    }catch{}
+  };
+  const saveBtn = qs('#saveFavGps');
+  saveBtn.onclick = async ()=>{
+    const lat = Number(qs('#lat').value), lng = Number(qs('#lng').value);
+    if(!lat || !lng){ alert('Sélectionne un point sur la carte d’abord.'); return; }
+    const label = prompt('Nom du point (ex: Camp Nord, Bloc 2025-09)?') || 'Point';
+    await supa.from('gps_favorites').insert({ user_id: state.user?.id, label, lat, lng });
+    await loadFavGps(); bindFavGpsUI(); alert('Point GPS enregistré ✓');
+  };
+}
+async function loadFavGps(){ if(!supa || !state.user) return state.favGps=[];
+  const { data } = await supa.from('gps_favorites').select('id,label,lat,lng').eq('user_id',state.user.id).order('created_at',{ascending:false});
+  state.favGps = data||[];
 }
 
 // ------- Checkout / Order -------
@@ -212,7 +242,7 @@ function buildOrder(fd){
   const lat = fd.get('lat'), lng = fd.get('lng');
   const gps_point = (lat && lng) ? { lat: Number(lat), lng: Number(lng) } : null;
   return {
-    meta:{ createdAt: new Date().toISOString(), app:'Logtek', version:'logtek-2.0.0' },
+    meta:{ createdAt: new Date().toISOString(), app:'Logtek', version:'logtek-3.0.0' },
     customer:{
       name:fd.get('customerName'), phone:fd.get('phone'), email:fd.get('email'),
       address:fd.get('address'), window:fd.get('window'), payMethod:fd.get('payMethod'),
@@ -242,58 +272,18 @@ const wa = (t)=>`https://wa.me/${APP_CONFIG.adminPhoneIntl.replace(/[^0-9]/g,'')
 const mailto = (s,b)=>`mailto:${encodeURIComponent(APP_CONFIG.adminEmail)}?subject=${encodeURIComponent(s)}&body=${encodeURIComponent(b)}`;
 
 async function ensureProfile(){ if(!supa || !state.user) return; await supa.from('profiles').upsert({ id: state.user.id }, { onConflict:'id' }); }
-async function loadProfile(){ if(!supa || !state.user) return; const { data } = await supa.from('profiles').select('*').eq('id', state.user.id).single(); state.profile=data||null;
-  if(state.profile){ const pf=qs('#profileForm'); if(pf){ pf.company.value=state.profile.company||''; pf.phone.value=state.profile.phone||''; pf.default_address.value=state.profile.default_address||''; } } }
-async function saveProfile(e){ e.preventDefault(); if(!supa || !state.user) return;
-  const pf=new FormData(qs('#profileForm')); await supa.from('profiles').upsert({ id:state.user.id, company:pf.get('company'), phone:pf.get('phone'), default_address:pf.get('default_address') }, { onConflict:'id' });
-  alert('Profil enregistré ✓'); }
-async function loadAddresses(){ if(!supa || !state.user) return; const { data }=await supa.from('addresses').select('*').eq('user_id',state.user.id).order('created_at',{ascending:false});
-  const root=qs('#addresses'); if(!root) return; root.innerHTML=''; (data||[]).forEach(a=>{
-    const d=document.createElement('div'); d.className='card';
-    d.innerHTML=`<strong>${a.label||'Adresse'}</strong><div class="small">${a.address}</div>
-      <div class="row" style="justify-content:flex-end;gap:6px;margin-top:8px">
-        <button class="btn" data-edit="${a.id}">✏️ Modifier</button>
-        <button class="btn danger" data-del="${a.id}">🗑 Supprimer</button>
-      </div>`;
-    d.querySelector(`[data-edit="${a.id}"]`).addEventListener('click', async ()=>{
-      const nv = prompt('Adresse :', a.address || '');
-      if(nv){ await supa.from('addresses').update({ address:nv }).eq('id', a.id); await loadAddresses(); }
-    });
-    d.querySelector(`[data-del="${a.id}"]`).addEventListener('click', async ()=>{
-      if(confirm('Supprimer cette adresse ?')){ await supa.from('addresses').delete().eq('id',a.id); await loadAddresses(); }
-    });
-    root.appendChild(d);
-  }); }
-async function addAddress(){ if(!supa || !state.user) return; const nv=prompt('Nouvelle adresse'); if(nv){ await supa.from('addresses').insert({ user_id:state.user.id, address:nv, label:'Livraison' }); await loadAddresses(); }}
-
-async function loadMachines(){ if(!supa || !state.user) return; const { data }=await supa.from('machines').select('*').eq('user_id',state.user.id).order('created_at',{ascending:false});
-  const root=qs('#machines'); if(!root) return; root.innerHTML=''; (data||[]).forEach(m=>{
-    const d=document.createElement('div'); d.className='card';
-    d.innerHTML=`<strong>${m.model}</strong><div class="small">${m.notes||''}</div>
-      <div class="row" style="justify-content:flex-end;gap:6px;margin-top:8px">
-        <button class="btn" data-edit="${m.id}">✏️ Modifier</button>
-        <button class="btn danger" data-del="${m.id}">🗑 Supprimer</button>
-      </div>`;
-    d.querySelector(`[data-edit="${m.id}"]`).addEventListener('click', async ()=>{
-      const nv = prompt('Modèle (ex: Ponsse Scorpion 2021) :', m.model || '');
-      if(nv){ await supa.from('machines').update({ model:nv }).eq('id', m.id); await loadMachines(); }
-    });
-    d.querySelector(`[data-del="${m.id}"]`).addEventListener('click', async ()=>{
-      if(confirm('Supprimer cette machine ?')){ await supa.from('machines').delete().eq('id',m.id); await loadMachines(); }
-    });
-    root.appendChild(d);
-  }); }
-async function addMachine(){ if(!supa || !state.user) return;
-  const b = prompt('Marque (ex: Ponsse)'); if(!b) return;
-  const m = prompt('Modèle (ex: Scorpion)'); if(!m) return;
-  const y = prompt('Année (ex: 2021)') || '';
-  const label = [b,m,y].filter(Boolean).join(' ');
-  await supa.from('machines').insert({ user_id:state.user.id, model: label }); await loadMachines();
-}
+async function loadProfile(){ if(!supa || !state.user) return; const { data } = await supa.from('profiles').select('*').eq('id', state.user.id).single(); state.profile=data||null; }
+async function loadAddresses(){}
+async function loadMachines(){}
+async function addAddress(){}
+async function addMachine(){}
 
 async function saveOrder(order){ if(!supa) return; await supa.from('orders').insert({ user_id: order.user_id, payload: order, total: order.total, email: order.customer.email, phone: order.customer.phone, address: order.customer.address, gps_point: order.gps_point }); }
 async function loadOrders(){ if(!supa || !state.user) return; const { data }=await supa.from('orders').select('id,created_at,total,payload').eq('user_id',state.user.id).order('created_at',{ascending:false});
-  const root=qs('#ordersList'); if(!root) return; root.innerHTML=''; (data||[]).forEach(o=>{ const d=document.createElement('div'); d.className='card'; const when=new Date(o.created_at).toLocaleString('fr-CA'); d.innerHTML=`<strong>Commande #${o.id}</strong><br>${when}<br>Total: ${fmt(o.total)}<br><span class="small">${o.payload.items.length} articles</span>`; root.appendChild(d); }); }
+  const root=qs('#ordersList'); if(!root) return; root.innerHTML=''; (data||[]).forEach(o=>{ const d=document.createElement('div'); d.className='card'; const when=new Date(o.created_at).toLocaleString('fr-CA'); d.innerHTML=`<strong>Commande #${o.id}</strong><br>${when}<br>Total: ${fmt(o.total)}<br><span class="small">${o.payload.items.length} articles</span>
+    <div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn" data-reorder="${o.id}">Commander à l’identique</button></div>`; 
+    d.querySelector(`[data-reorder="${o.id}"]`).addEventListener('click', ()=>{ state.cart = o.payload.items.map(i=>({ id:i.id, qty:i.qty, price:i.price })); saveCart(); view('view-cart'); }); 
+    root.appendChild(d); }); }
 
 // ------- AUTH (tabs + actions) -------
 function bindAuthTabs(){
@@ -315,7 +305,7 @@ function bindAuthTabs(){
     if(error) return alert(error.message);
     await checkAdmin();
     view(state.isAdmin ? 'view-admin' : 'view-account');
-    await ensureProfile(); await loadProfile(); await loadAddresses(); await loadMachines(); await loadOrders();
+    await ensureProfile(); await loadProfile(); await loadFavGps(); await loadOrders();
   });
   forms.signup.addEventListener('submit', async (e)=>{
     e.preventDefault();
@@ -454,6 +444,15 @@ async function loadAdminProducts(){
     await loadAdminProducts(); await loadProducts();
     alert('Import terminé ✓');
   };
+  qs('#btnExportCSV').onclick = async ()=>{
+    const { data } = await supa.from('orders').select('id,created_at,total,payload').order('created_at',{ascending:true});
+    const rows = [['id','date','client','total','items']].concat((data||[]).map(o=>[o.id,new Date(o.created_at).toISOString(),o.payload?.customer?.name||'',o.total,(o.payload?.items||[]).map(i=>`${i.name} x${i.qty}`).join(' | ')]));
+    const csv = rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='ventes.csv'; a.click();
+    URL.revokeObjectURL(url);
+  };
 }
 
 // ------- Admin Clients -------
@@ -478,23 +477,18 @@ document.addEventListener('DOMContentLoaded', ()=>{
     view('view-'+b.dataset.nav);
     if(b.dataset.nav==='orders') loadOrders();
     if(b.dataset.nav==='admin'){ bindAdminTabs(); loadAdminDashboard(); }
-    if(b.dataset.nav==='checkout'){ initCheckoutMap(); }
+    if(b.dataset.nav==='checkout'){ initMachinesSelector(); initCheckoutMap(); }
   }));
 
   // header auth buttons
   qs('#loginBtn').addEventListener('click', ()=> view('view-auth'));
   qs('#logoutBtn').addEventListener('click', async ()=>{ await supa.auth.signOut(); state.isAdmin=false; toggleAuthUI(); alert('Déconnecté'); view('view-auth'); });
 
-  // account tabs and forms
-  const pf = qs('#profileForm'); if (pf) pf.addEventListener('submit', saveProfile);
-  const addAddressBtn = qs('#addAddressBtn'); if (addAddressBtn) addAddressBtn.addEventListener('click', addAddress);
-  const addMachineBtn = qs('#addMachineBtn'); if (addMachineBtn) addMachineBtn.addEventListener('click', addMachine);
-
   // catalog/cart
   loadProducts();
   qs('#cartBtn').addEventListener('click', ()=>{ renderCart(); view('view-cart'); });
   qs('#continueShopping').addEventListener('click', ()=> view('view-catalog'));
-  qs('#checkoutBtn').addEventListener('click', ()=>{ renderCart(); if(state.cart.length===0){ alert('Panier vide.'); return;} initMachinesSelector(); initCheckoutMap(); view('view-checkout'); });
+  qs('#checkoutBtn').addEventListener('click', ()=>{ renderCart(); if(state.cart.length===0){ alert('Panier vide.'); return;} view('view-checkout'); initMachinesSelector(); initCheckoutMap(); });
   qs('#backToCart').addEventListener('click', ()=> view('view-cart'));
 
   // checkout submit
@@ -515,6 +509,5 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   // init supabase
   initSupabase();
-  // Default map preload when going to checkout
 });
 

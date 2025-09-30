@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Logtek 2.0</title>
+  <title>Logtek 3.0</title>
   <meta name="theme-color" content="#0a0a0a" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="styles.css" />
@@ -37,7 +37,7 @@
     <h1>Commodités pour machines — livraison rapide</h1>
     <p>Chaînes & guides • Huiles • Urée (DEF) • Filtres</p>
     <div class="chips">
-      <span class="chip">Zone pilote 15 km</span>
+      <span class="chip">Zones Logtek</span>
       <span class="chip">Interac / Paiement à la livraison</span>
       <span class="chip">Facturation clients approuvés</span>
     </div>
@@ -86,9 +86,13 @@
       <input name="machineCustom" placeholder="Marque / Modèle / Année">
     </label>
 
+    <h3>Adresse & GPS</h3>
     <label>Adresse de livraison<input required name="address" id="addressField" placeholder="123, route du Rang, Ville, Code postal"></label>
+    <div class="row">
+      <select id="favGpsSelect"></select>
+      <button class="btn" type="button" id="saveFavGps">⭐ Sauvegarder ce point</button>
+    </div>
 
-    <h3>Localisation GPS (optionnel mais recommandé)</h3>
     <div class="micro">Clique sur la carte pour déposer un pin, ou utilise ta position.</div>
     <div id="map" style="height:320px;border:1px solid var(--line);border-radius:12px;overflow:hidden"></div>
     <div class="row" style="margin-top:8px;gap:8px">
@@ -212,7 +216,8 @@
   <section id="adm-products" class="adm-section" hidden>
     <div class="row actions">
       <button id="btnNewProduct" class="btn accent">➕ Nouveau produit</button>
-      <button id="btnImportSeed" class="btn">📥 Importer produits.json</button>
+      <button id="btnImportSeed" class="btn">📥 Importer products.json</button>
+      <button id="btnExportCSV" class="btn">⬇️ Export ventes CSV</button>
     </div>
     <div id="adm-products-list" class="grid cards"></div>
   </section>
