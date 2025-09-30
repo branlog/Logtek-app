@@ -1,42 +1,155 @@
 [
   {
-    "id": "def-20l",
-    "name": "Urée (DEF) 20 L – certifié ISO 22241",
-    "desc": "Solution d'urée 32.5% pour SCR. Bidon 20 L.",
-    "price": 26.9,
-    "unit": "bidon",
-    "sku": "DEF20L"
-  },
-  {
-    "id": "oil-15w40-18.9",
-    "name": "Huile moteur 15W40 – seau 18.9 L",
-    "desc": "Huile diesel lourde API CK-4.",
-    "price": 114.0,
-    "unit": "seau",
-    "sku": "OIL15W40-18.9"
-  },
-  {
-    "id": "hyd-iso46-20l",
-    "name": "Huile hydraulique ISO 46 – 20 L",
-    "desc": "Anti-usure, applications forestières/industrielles.",
-    "price": 89.0,
-    "unit": "bidon",
-    "sku": "HYD46-20L"
-  },
-  {
-    "id": "grease-ctg-10",
-    "name": "Graisse NLGI 2 – Cartouches (x10)",
-    "desc": "Graisse multiusage EP, haute pression.",
-    "price": 49.0,
-    "unit": "boîte",
-    "sku": "GREASE-CTG-10"
-  },
-  {
-    "id": "filter-oil-std",
-    "name": "Filtre à huile — standard",
-    "desc": "Confirmer le modèle de machine avant livraison.",
-    "price": 19.0,
+    "id": "chain-oregon-20",
+    "category": "Chaînes",
+    "name": "Chaîne Oregon 20\"",
+    "desc": "Chaîne tronçonneuse 0.325\" 72 maillons (exemple).",
+    "price": 32.91,
     "unit": "unité",
-    "sku": "FILTER-OIL-STD"
+    "sku": "OR-20-72"
+  },
+  {
+    "id": "chain-trilink-20",
+    "category": "Chaînes",
+    "name": "Chaîne TriLink 20\"",
+    "desc": "Chaîne tronçonneuse 3/8\" 72 maillons (exemple).",
+    "price": 27.95,
+    "unit": "unité",
+    "sku": "TL-20-72"
+  },
+  {
+    "id": "chain-harvester-404-28",
+    "category": "Chaînes",
+    "name": "Chaîne Harvester .404 — 28\"",
+    "desc": "Chaîne .404 harvester, usage forestier intensif.",
+    "price": 189.0,
+    "unit": "unité",
+    "sku": "HV-404-28"
+  },
+  {
+    "id": "chain-harvester-34-32",
+    "category": "Chaînes",
+    "name": "Chaîne Harvester 3/4 — 32\"",
+    "desc": "Chaîne 3/4 pour têtes d’abattage, calibre pro.",
+    "price": 239.0,
+    "unit": "unité",
+    "sku": "HV-34-32"
+  },
+  {
+    "id": "bar-saw-18",
+    "category": "Guides",
+    "name": "Guide tronçonneuse 18\"",
+    "desc": "Pas .325 / 3/8 selon version.",
+    "price": 85.0,
+    "unit": "unité",
+    "sku": "BAR-18"
+  },
+  {
+    "id": "bar-saw-20",
+    "category": "Guides",
+    "name": "Guide tronçonneuse 20\"",
+    "desc": "Montage standard.",
+    "price": 95.0,
+    "unit": "unité",
+    "sku": "BAR-20"
+  },
+  {
+    "id": "bar-harvester-28",
+    "category": "Guides",
+    "name": "Guide Harvester 28\"",
+    "desc": "Pour têtes H7/H8/Waratah selon compatibilité.",
+    "price": 250.0,
+    "unit": "unité",
+    "sku": "BAR-HV-28"
+  },
+  {
+    "id": "bar-harvester-32",
+    "category": "Guides",
+    "name": "Guide Harvester 32\"",
+    "desc": "Acier trempé, usage sévère.",
+    "price": 320.0,
+    "unit": "unité",
+    "sku": "BAR-HV-32"
+  },
+  {
+    "id": "oil-hyd-iso46-20l",
+    "category": "Huiles",
+    "name": "Huile hydraulique ISO 46 — 20 L",
+    "desc": "Anti-usure, conditions forestières.",
+    "price": 85.0,
+    "unit": "bidon 20 L",
+    "sku": "HYD-46-20L"
+  },
+  {
+    "id": "oil-engine-15w40-20l",
+    "category": "Huiles",
+    "name": "Huile moteur 15W40 — 20 L",
+    "desc": "API CK-4, diesel lourd.",
+    "price": 95.0,
+    "unit": "bidon 20 L",
+    "sku": "ENG-15W40-20L"
+  },
+  {
+    "id": "oil-bar-20l",
+    "category": "Huiles",
+    "name": "Huile de chaîne — 20 L",
+    "desc": "Adhésive, toutes saisons.",
+    "price": 75.0,
+    "unit": "bidon 20 L",
+    "sku": "BAR-OIL-20L"
+  },
+  {
+    "id": "def-10l",
+    "category": "Urée DEF",
+    "name": "Urée (DEF) 10 L",
+    "desc": "ISO 22241, 32.5% urée.",
+    "price": 25.0,
+    "unit": "bidon 10 L",
+    "sku": "DEF-10L"
+  },
+  {
+    "id": "def-208l",
+    "category": "Urée DEF",
+    "name": "Urée (DEF) 208 L",
+    "desc": "Baril 208 litres.",
+    "price": 600.0,
+    "unit": "baril 208 L",
+    "sku": "DEF-208L"
+  },
+  {
+    "id": "filter-air",
+    "category": "Filtres",
+    "name": "Filtre à air",
+    "desc": "Spécifier le modèle de machine.",
+    "price": 45.0,
+    "unit": "unité",
+    "sku": "FLT-AIR"
+  },
+  {
+    "id": "filter-fuel",
+    "category": "Filtres",
+    "name": "Filtre à carburant",
+    "desc": "Micron selon moteur.",
+    "price": 55.0,
+    "unit": "unité",
+    "sku": "FLT-FUEL"
+  },
+  {
+    "id": "filter-hyd",
+    "category": "Filtres",
+    "name": "Filtre hydraulique",
+    "desc": "Normes haute pression.",
+    "price": 65.0,
+    "unit": "unité",
+    "sku": "FLT-HYD"
+  },
+  {
+    "id": "filter-cabin",
+    "category": "Filtres",
+    "name": "Filtre cabine",
+    "desc": "Poussières fines.",
+    "price": 35.0,
+    "unit": "unité",
+    "sku": "FLT-CAB"
   }
 ]

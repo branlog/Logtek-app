@@ -1,8 +1,8 @@
 window.APP_CONFIG = {
   businessName: "Logtek",
   baseCurrency: "CAD",
-  shippingFlat: 5.99,
-  freeShippingMin: 199.0,
+  shippingFlat: 9.99,
+  freeShippingMin: 250.0,
   zoneKm: 15,
   adminPhoneIntl: "+14188943093",
   adminEmail: "info@logtek.ca",

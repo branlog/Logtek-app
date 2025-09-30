@@ -20,6 +20,9 @@
     <button data-nav="orders">Commandes</button>
   </nav>
   <div class="right">
+    <div class="category-filter">
+      <select id="catFilter"></select>
+    </div>
     <button id="cartBtn" class="cart-btn" aria-label="Panier">🛒<span id="cartCount">0</span></button>
     <button id="loginBtn" class="btn ghost">Se connecter</button>
     <button id="logoutBtn" class="btn ghost" hidden>Quitter</button>
@@ -29,13 +32,14 @@
 <main id="view-catalog" class="view active">
   <section class="hero">
     <h1>Commodités pour machines — livraison rapide</h1>
-    <p>Urée (DEF) • Huiles moteur & hydraulique • Graisse • Filtres</p>
+    <p>Chaînes & guides • Huiles • Urée (DEF) • Filtres</p>
     <div class="chips">
       <span class="chip">Zone pilote 15 km</span>
-      <span class="chip">Paiement à la livraison / Interac</span>
-      <span class="chip">Facture clients approuvés</span>
+      <span class="chip">Interac / Paiement à la livraison</span>
+      <span class="chip">Facturation clients approuvés</span>
     </div>
   </section>
+  <section id="categories" class="categories"></section>
   <section class="catalog" id="catalog"></section>
 </main>
 
@@ -57,7 +61,7 @@
   <h2>Informations de livraison</h2>
   <form id="checkoutForm" class="card form">
     <div class="grid2">
-      <label>Entreprise / Nom<input required name="customerName" placeholder="Transport Lavoie inc."></label>
+      <label>Entreprise / Nom<input required name="customerName" placeholder="Entrepreneur Forestier Inc."></label>
       <label>Téléphone<input required name="phone" placeholder="+1 418 ..." pattern="[0-9+\-()\s]{7,}"></label>
       <label>Courriel<input type="email" name="email" placeholder="info@exemple.com"></label>
     </div>
@@ -206,9 +210,7 @@
 
 <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js');
-  });
+  window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
 }
 </script>
 </body>
