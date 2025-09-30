@@ -3,10 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Logtek</title>
+  <title>Logtek 3.0</title>
   <meta name="theme-color" content="#0a0a0a" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="config.js"></script>
   <script defer src="app.js"></script>
@@ -18,6 +20,7 @@
     <button data-nav="catalog">Catalogue</button>
     <button data-nav="account">Compte</button>
     <button data-nav="orders">Commandes</button>
+    <button data-nav="admin" id="adminNav" hidden>Admin</button>
   </nav>
   <div class="right">
     <div class="category-filter">
@@ -34,7 +37,7 @@
     <h1>Commodités pour machines — livraison rapide</h1>
     <p>Chaînes & guides • Huiles • Urée (DEF) • Filtres</p>
     <div class="chips">
-      <span class="chip">Zone pilote 15 km</span>
+      <span class="chip">Zones Logtek</span>
       <span class="chip">Interac / Paiement à la livraison</span>
       <span class="chip">Facturation clients approuvés</span>
     </div>
@@ -83,7 +86,22 @@
       <input name="machineCustom" placeholder="Marque / Modèle / Année">
     </label>
 
+    <h3>Adresse & GPS</h3>
     <label>Adresse de livraison<input required name="address" id="addressField" placeholder="123, route du Rang, Ville, Code postal"></label>
+    <div class="row">
+      <select id="favGpsSelect"></select>
+      <button class="btn" type="button" id="saveFavGps">⭐ Sauvegarder ce point</button>
+    </div>
+
+    <div class="micro">Clique sur la carte pour déposer un pin, ou utilise ta position.</div>
+    <div id="map" style="height:320px;border:1px solid var(--line);border-radius:12px;overflow:hidden"></div>
+    <div class="row" style="margin-top:8px;gap:8px">
+      <button class="btn" type="button" id="useMyLocation">📍 Utiliser ma position</button>
+      <span class="small" id="gpsLabel">Aucun point sélectionné</span>
+    </div>
+    <input type="hidden" name="lat" id="lat">
+    <input type="hidden" name="lng" id="lng">
+
     <div class="micro">
       <label class="inline"><input type="checkbox" id="saveAddress"> Enregistrer cette adresse</label>
       <label class="inline"><input type="checkbox" id="saveMachine"> Enregistrer cette machine</label>
@@ -164,42 +182,48 @@
   </section>
 </main>
 
-<main id="view-account" class="view">
-  <h2>Espace client</h2>
+<!-- ADMIN (protégé) -->
+<main id="view-admin" class="view">
+  <h2>Admin</h2>
   <div class="tabs">
-    <button data-acc="profile" class="active">Profil</button>
-    <button data-acc="addresses">Adresses</button>
-    <button data-acc="machines">Machines</button>
-    <button data-acc="orders">Commandes</button>
+    <button data-adm="dashboard" class="active">Dashboard</button>
+    <button data-adm="orders">Commandes</button>
+    <button data-adm="map">Carte</button>
+    <button data-adm="products">Produits</button>
+    <button data-adm="clients">Clients</button>
   </div>
 
-  <section id="acc-profile" class="acc-section">
-    <form id="profileForm" class="card form">
-      <div class="grid3">
-        <label>Entreprise / Nom<input name="company"></label>
-        <label>Téléphone<input name="phone"></label>
-        <label>Adresse par défaut<input name="default_address"></label>
-      </div>
-      <div class="actions"><button class="btn primary">Enregistrer</button></div>
-    </form>
-  </section>
-
-  <section id="acc-addresses" class="acc-section" hidden>
-    <div class="row actions">
-      <button id="addAddressBtn" class="btn accent">➕ Ajouter une adresse</button>
+  <section id="adm-dashboard" class="adm-section">
+    <div class="grid3">
+      <div class="card"><strong>CA total</strong><div id="adm-ca" class="big">$0</div></div>
+      <div class="card"><strong>Commandes</strong><div id="adm-orders-count" class="big">0</div></div>
+      <div class="card"><strong>Clients</strong><div id="adm-customers-count" class="big">0</div></div>
     </div>
-    <div id="addresses" class="grid cards"></div>
-  </section>
-
-  <section id="acc-machines" class="acc-section" hidden>
-    <div class="row actions">
-      <button id="addMachineBtn" class="btn accent">➕ Ajouter une machine</button>
+    <div class="card" style="margin-top:12px">
+      <strong>Dernières commandes</strong>
+      <div id="adm-last-orders" class="grid cards" style="margin-top:8px"></div>
     </div>
-    <div id="machines" class="grid cards"></div>
   </section>
 
-  <section id="acc-orders" class="acc-section" hidden>
-    <div id="ordersList" class="grid cards"></div>
+  <section id="adm-orders" class="adm-section" hidden>
+    <div id="adm-orders-list" class="grid cards"></div>
+  </section>
+
+  <section id="adm-map" class="adm-section" hidden>
+    <div id="adminMap" style="height:420px;border:1px solid var(--line);border-radius:12px;overflow:hidden"></div>
+  </section>
+
+  <section id="adm-products" class="adm-section" hidden>
+    <div class="row actions">
+      <button id="btnNewProduct" class="btn accent">➕ Nouveau produit</button>
+      <button id="btnImportSeed" class="btn">📥 Importer products.json</button>
+      <button id="btnExportCSV" class="btn">⬇️ Export ventes CSV</button>
+    </div>
+    <div id="adm-products-list" class="grid cards"></div>
+  </section>
+
+  <section id="adm-clients" class="adm-section" hidden>
+    <div id="adm-clients-list" class="grid cards"></div>
   </section>
 </main>
 
